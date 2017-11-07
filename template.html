@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Automine: %%ADDRESS%%</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <style type="text/css">
+    .chart-container {
+      position: relative;
+      margin: auto;
+      height: 40vh;
+      width: 80vw;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">Automine</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="https://ethermine.org/miners/%%ADDRESS%%">Ethermine</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-top: 6em;">
+
+    <div class="starter-template">
+      <h1>Stats for Miner:</h1>
+      <p>%%ADDRESS%%</p>
+      <h4>Hashrate, Shares and Workers</h4>
+      <canvas id="hashrateChart" width="400" height="200"></canvas>
+      <canvas id="sharesChart" width="400" height="200"></canvas>
+      <canvas id="workersChart" width="400" height="200"></canvas>
+    </div>
+
+  </div><!-- /.container -->
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script> -->
+  <script>
+    var graph_data = {
+      time: [],
+      validShares: [],
+      invalidShares: [],
+      staleShares: [],
+      activeWorkers: [],
+      currentHashrate: [],
+      averageHashrate: []
+    };
+    function padToTwo(number) {
+      if (number<=99) { number = ("0"+number).slice(-2); }
+      return number;
+    }
+
+    $(document).ready(function(){
+      $.getJSON('%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime(), function(data) {
+        data.forEach(function(point) {
+          var the_date = new Date(point.time*1000);
+          graph_data.time.push(padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes()));
+          graph_data.validShares.push(point.validShares);
+          graph_data.invalidShares.push(point.invalidShares);
+          graph_data.staleShares.push(point.staleShares);
+          graph_data.activeWorkers.push(point.activeWorkers);
+          graph_data.currentHashrate.push((point.currentHashrate/1000000).toFixed(2));
+          graph_data.averageHashrate.push((point.averageHashrate/1000000).toFixed(2));
+        });
+        var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: graph_data.time,
+            datasets: [
+              {
+                label: 'Current MH/s',
+                backgroundColor: '#356997',
+                borderColor: '#356997',
+                fill: false,
+                data: graph_data.currentHashrate
+              },
+              {
+                label: 'Average MH/s',
+                backgroundColor: '#df691a',
+                borderColor: '#df691a',
+                fill: false,
+                data: graph_data.averageHashrate
+              }
+            ]
+          }
+        });
+        var sharesChart = new Chart(document.getElementById("sharesChart").getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: graph_data.time,
+            datasets: [
+              {
+                label: 'Valid Shares',
+                backgroundColor: '#356997',
+                borderColor: '#356997',
+                fill: false,
+                data: graph_data.validShares
+              },
+              {
+                label: 'Stale Shares',
+                backgroundColor: '#df691a',
+                borderColor: '#df691a',
+                fill: false,
+                data: graph_data.staleShares
+              },
+              {
+                label: 'Invalid Shares',
+                backgroundColor: '#4f9849',
+                borderColor: '#4f9849',
+                fill: false,
+                data: graph_data.invalidShares
+              }
+            ]
+          }
+        });
+        var workersChart = new Chart(document.getElementById("workersChart").getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: graph_data.time,
+            datasets: [
+              {
+                label: 'Active workers',
+                backgroundColor: '#356997',
+                borderColor: '#356997',
+                fill: false,
+                data: graph_data.activeWorkers
+              }
+            ]
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+

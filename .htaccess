@@ -1,0 +1,3 @@
+<FilesMatch "\.json$">
+Header set Cache-Control "max-age=120, public"
+</FilesMatch>
