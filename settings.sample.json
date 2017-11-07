@@ -1,4 +1,5 @@
 {
+  "database_url": "mongodb://localhost/automine",
   "accounts": [
     {
       "name": "MAKE_SOMETHING_UP_THAT_WILL_WORK_AS_A_FILENAME",
