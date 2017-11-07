@@ -33,9 +33,9 @@ module.exports = class Fetcher {
       var threshold = Math.floor(thresdate.getTime()/1000);
       return Rounds.find({ 'time': { $gt: threshold }, 'address': this.address })
       .then(results => {
-        fs.writeFile(this.name + timespan.days + '.json', JSON.stringify(results, null, 2), (err) => {
+        fs.writeFile('stats_' + this.name + timespan.days + '.json', JSON.stringify(results, null, 2), (err) => {
           if (err) throw err;
-          else console.log('✍️  ' + this.name + timespan.days + '.json is saved! ' + results.length + ' results newer than ' + threshold);
+          else console.log('✍️  stats_' + this.name + timespan.days + '.json is saved! ' + results.length + ' results newer than ' + threshold);
         });
       })
     });
