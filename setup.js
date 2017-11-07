@@ -20,27 +20,22 @@ config.accounts.forEach(account => {
 });
 
 html_files.forEach(html_file => {
-  fs.access(script_directory + html_file.filename, fs.constants.F_OK, (err) => {
-    console.log(err ? '😲  ' + html_file.filename + ' does not exist' : '👍  ' + html_file.filename + ' exists');
-    if (err) {
-      if(html_template === null){
-        html_template = fs.readFileSync(script_directory + '/template.html', 'utf8');
-        html_template = html_template.split("\n");
-      }
-      var file_lines = [];
-      html_template.forEach(line => {
-        file_lines.push(
-          line
-          .replace("%%ACCOUNTNAME%%", html_file.accountname)
-          .replace("%%ADDRESS%%", html_file.address)
-          .replace("%%TIMESPAN%%", html_file.timespan)
-        );
-      });
-      var file_content = file_lines.join("\n");
-      fs.writeFile(script_directory + html_file.filename, file_content, 'utf8', (err) => {
-        if (err) throw err;
-        else console.log('✍️  ' + html_file.filename + ' has been saved!');
-      });
-    }
+  if(html_template === null){
+    html_template = fs.readFileSync(script_directory + '/template.html', 'utf8');
+    html_template = html_template.split("\n");
+  }
+  var file_lines = [];
+  html_template.forEach(line => {
+    file_lines.push(
+      line
+      .replace("%%ACCOUNTNAME%%", html_file.accountname)
+      .replace("%%ADDRESS%%", html_file.address)
+      .replace("%%TIMESPAN%%", html_file.timespan)
+    );
+  });
+  var file_content = file_lines.join("\n");
+  fs.writeFile(script_directory + html_file.filename, file_content, 'utf8', (err) => {
+    if (err) throw err;
+    else console.log('✍️  ' + html_file.filename + ' has been saved!');
   });
 });
