@@ -21,7 +21,7 @@ config.accounts.forEach(account => {
 
 html_files.forEach(html_file => {
   fs.access(script_directory + html_file.filename, fs.constants.F_OK, (err) => {
-    console.log(err ? '😲 ' + html_file.filename + ' does not exist' : '👍 ' + html_file.filename + ' exists');
+    console.log(err ? '😲  ' + html_file.filename + ' does not exist' : '👍  ' + html_file.filename + ' exists');
     if (err) {
       if(html_template === null){
         html_template = fs.readFileSync(script_directory + '/template.html', 'utf8');
@@ -39,7 +39,7 @@ html_files.forEach(html_file => {
       var file_content = file_lines.join("\n");
       fs.writeFile(script_directory + html_file.filename, file_content, 'utf8', (err) => {
         if (err) throw err;
-        else console.log('✍️ ' + html_file.filename + ' has been saved!');
+        else console.log('✍️  ' + html_file.filename + ' has been saved!');
       });
     }
   });
