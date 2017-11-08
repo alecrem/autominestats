@@ -18,28 +18,75 @@
 </head>
 <body>
   <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="#">Automine</a>
+    <!--a class="navbar-brand" href="#"--><span class="navbar-brand">Automine Stats for %%ACCOUNTNAME%%</span><!--/a-->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="https://ethermine.org/miners/%%ADDRESS%%">Ethermine</a>
+        <li class="nav-item">
+          <a class="nav-link" href="stats_%%ACCOUNTNAME%%1.html">1 day</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stats_%%ACCOUNTNAME%%3.html">3 days</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stats_%%ACCOUNTNAME%%7.html">7 days</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stats_%%ACCOUNTNAME%%30.html">30 days</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://ethermine.org/miners/%%ADDRESS%%/payouts">Ethermine Payouts/Rounds</a>
         </li>
       </ul>
     </div>
   </nav>
 
-  <div class="container" style="padding-top: 6em;">
-
-    <div class="starter-template">
-      <h1>Stats for Miner:</h1>
-      <p>%%ADDRESS%%</p>
-      <h4>Hashrate, Shares and Workers</h4>
+  <div class="container" style="padding-top: 5em;">
+    <div class="row">
+      <h5>Stats for %%TIMESPAN%% days</p>
+    </div>
+    <div class="row">
+      <p style="font-size: 12px;">Miner: <a href="https://etherchain.org/account/0x%%ADDRESS%%">%%ADDRESS%%</a></p>
+    </div>
+    <div class="row">
+      <div class="col-md-auto">
+        <div class="card border-dark">
+          <h4 class="card-header text-white bg-warning">Hashrates</h4>
+          <div class="card-body">
+            <p class="card-text" id="card-hashrate">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-auto">
+        <div class="card border-dark">
+          <h4 class="card-header text-white bg-success">Workers</h4>
+          <div class="card-body">
+            <p class="card-text" id="card-workers">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-auto">
+        <div class="card border-dark">
+          <h4 class="card-header text-white bg-danger">Shares (Last 1h)</h4>
+          <div class="card-body">
+            <p class="card-text" id="card-shares">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 2em;">
+      <h5>Hashrate, shares and workers</h5>
+    </div>
+    <div class="row">
       <canvas id="hashrateChart" width="400" height="200"></canvas>
+    </div>
+    <div class="row">
       <canvas id="sharesChart" width="400" height="200"></canvas>
+    </div>
+    <div class="row">
       <canvas id="workersChart" width="400" height="200"></canvas>
     </div>
 
@@ -77,28 +124,51 @@
           graph_data.currentHashrate.push((point.currentHashrate/1000000).toFixed(2));
           graph_data.averageHashrate.push((point.averageHashrate/1000000).toFixed(2));
         });
-        var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: graph_data.time,
-            datasets: [
-              {
-                label: 'Current MH/s',
-                backgroundColor: '#356997',
-                borderColor: '#356997',
-                fill: false,
-                data: graph_data.currentHashrate
-              },
-              {
-                label: 'Average MH/s',
-                backgroundColor: '#df691a',
-                borderColor: '#df691a',
-                fill: false,
-                data: graph_data.averageHashrate
-              }
-            ]
-          }
-        });
+        console.log(data[data.length-1]);
+        var currentHashrate = (data[data.length-1].currentHashrate/1000000).toFixed(2);
+        var averageHashrate = (data[data.length-1].averageHashrate/1000000).toFixed(2);
+        var activeWorkers = data[data.length-1].activeWorkers;
+        var validShares = data[data.length-1].validShares;
+        var staleShares = data[data.length-1].staleShares;
+        var invalidShares = data[data.length-1].invalidShares;
+        var totalShares = validShares + staleShares + invalidShares;
+        var validSharesPercent = (validShares*100/totalShares).toFixed(2);
+        var staleSharesPercent = (staleShares*100/totalShares).toFixed(2);
+        var invalidSharesPercent = (invalidShares*100/totalShares).toFixed(2);
+        var sharesString = validShares + ' (' + validSharesPercent + '%)';
+        sharesString += ' / ' + staleShares + ' (' + staleSharesPercent + '%)';
+        sharesString += ' / ' + invalidShares + ' (' + invalidSharesPercent + '%)';
+        $('#card-hashrate').html(currentHashrate + '&nbsp;MH/s  ' + averageHashrate + '&nbsp;MH/s');
+        $('#card-workers').html(activeWorkers);
+        $('#card-shares').html(sharesString);
+        var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext('2d'),{
+            type: 'line',
+            data: {
+              labels: graph_data.time,
+              datasets: [
+                {
+                  label: 'Current MH/s',
+                  backgroundColor: '#356997',
+                  borderColor: '#356997',
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data.currentHashrate
+                },
+                {
+                  label: 'Average MH/s',
+                  backgroundColor: '#df691a',
+                  borderColor: '#df691a',
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data.averageHashrate
+                }
+              ]
+            }
+          });
         var sharesChart = new Chart(document.getElementById("sharesChart").getContext('2d'), {
           type: 'bar',
           data: {
@@ -108,6 +178,9 @@
                 label: 'Valid Shares',
                 backgroundColor: '#356997',
                 borderColor: '#356997',
+                borderWidth: 1,
+                pointBorderWidth: 0,
+                pointRadius: 1/%%TIMESPAN%%,
                 fill: false,
                 data: graph_data.validShares
               },
@@ -115,6 +188,9 @@
                 label: 'Stale Shares',
                 backgroundColor: '#df691a',
                 borderColor: '#df691a',
+                borderWidth: 1,
+                pointBorderWidth: 0,
+                pointRadius: 1/%%TIMESPAN%%,
                 fill: false,
                 data: graph_data.staleShares
               },
@@ -122,6 +198,9 @@
                 label: 'Invalid Shares',
                 backgroundColor: '#4f9849',
                 borderColor: '#4f9849',
+                borderWidth: 1,
+                pointBorderWidth: 0,
+                pointRadius: 1/%%TIMESPAN%%,
                 fill: false,
                 data: graph_data.invalidShares
               }
@@ -137,6 +216,9 @@
                 label: 'Active workers',
                 backgroundColor: '#356997',
                 borderColor: '#356997',
+                borderWidth: 1,
+                pointBorderWidth: 0,
+                pointRadius: 1/%%TIMESPAN%%,
                 fill: false,
                 data: graph_data.activeWorkers
               }
