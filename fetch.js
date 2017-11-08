@@ -5,7 +5,8 @@ var settings = JSON.parse(fs.readFileSync(script_directory + '/settings.json', '
 
 mongoose.Promise = global.Promise;
 mongoose.connect(settings.database_url, { useMongoClient: true });
-var Rounds = require('./models')(mongoose);
+var Rounds = require('./model_miner_history')(mongoose);
+var WorkerRounds = require('./model_worker_history')(mongoose);
 var Fetcher = require('./fetcher');
 
 var db = mongoose.connection;
@@ -14,7 +15,10 @@ var fetchers = []
 
 settings.accounts.forEach(account => {
   // console.log("New fetcher for " + JSON.stringify(account));
-  account.models = Rounds;
+  account.models = {
+    "Rounds": Rounds,
+    "WorkerRounds": WorkerRounds
+  };
   fetchers.push(new Fetcher(account));
   // console.log("Fetcher for " + account.name + " created");
 });
@@ -23,7 +27,7 @@ fetchers.forEach(fetcher => {
   fetcher.running = true;
   fetcher.find_latest()
   .then(threshold => {
-    fetcher.fetch(threshold)
+    fetcher.fetch_miner_history(threshold)
     .then(saved_rounds => {
       console.log("🚛  " + fetcher.name + ": " + saved_rounds + " rounds newer than " + fetcher.latest_round_time);
       fetcher.write_jsons(settings.timespans)
@@ -37,5 +41,12 @@ fetchers.forEach(fetcher => {
         if (are_we_done) db.close();
       })
     });
+  })
+});
+
+fetchers.forEach(fetcher => {
+  fetcher.fetch_worker_list()
+  .then(current_workers => {
+    console.log(current_workers);
   })
 });

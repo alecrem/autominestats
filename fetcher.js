@@ -1,4 +1,5 @@
 Rounds = null
+WorkerRounds = null
 var needle = require('needle');
 var fs = require('fs');
 
@@ -6,13 +7,13 @@ module.exports = class Fetcher {
   constructor(args){
     this.address = args.address;
     this.name = args.name;
-    this.fetch_url = 'https://api.ethermine.org/miner/' + args.address + '/history';
     this.latest_round_time = 0;
     this.running = false;
-    Rounds = args.models;
+    Rounds = args.models.Rounds;
+    WorkerRounds = args.models.WorkerRounds;
   }
   find_latest() {
-    // console.log("Finding the latest record");
+    // console.log("Finding the latest record on our Mongo database");
     return Rounds.findOne({ 'address': this.address }, {}, { sort: { time: -1 } }).exec()
     .then((result) => {
       if (typeof result === 'object' && result !== null) {
@@ -46,8 +47,9 @@ module.exports = class Fetcher {
     })
     .catch((err) => console.error(err));
   }
-  fetch(threshold) {
-    return needle('get', this.fetch_url)
+  fetch_miner_history(threshold) {
+    var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/history';
+    return needle('get', fetch_url)
     .then(resp => {
       var new_rounds = [];
       if (typeof threshold == "number") {
@@ -89,7 +91,22 @@ module.exports = class Fetcher {
       .catch((err) => console.error(err));
     })
     .catch(err => {
-      console.error("Error fetching ethermine's JSON:");
+      console.error("Error fetching ethermine's miner history JSON:");
+      console.error(err);
+    });
+  }
+  fetch_worker_list() {
+    var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/workers';
+    return needle('get', fetch_url)
+    .then(resp => {
+      var current_workers = [];
+      current_workers = resp.body.data;
+      console.log("Workers fetched: " + resp.body.data.length);
+      console.log("Workers to be saved: " + current_workers.length);
+      return current_workers;
+    })
+    .catch(err => {
+      console.error("Error fetching ethermine's current workers JSON:");
       console.error(err);
     });
   }
