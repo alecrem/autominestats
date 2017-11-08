@@ -28,9 +28,9 @@ html_files.forEach(html_file => {
   html_template.forEach(line => {
     file_lines.push(
       line
-      .replace("%%ACCOUNTNAME%%", html_file.accountname)
-      .replace("%%ADDRESS%%", html_file.address)
-      .replace("%%TIMESPAN%%", html_file.timespan)
+      .replace(/%%ACCOUNTNAME%%/g, html_file.accountname)
+      .replace(/%%ADDRESS%%/g, html_file.address)
+      .replace(/%%TIMESPAN%%/g, html_file.timespan)
     );
   });
   var file_content = file_lines.join("\n");
