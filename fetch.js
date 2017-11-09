@@ -32,21 +32,21 @@ fetchers.forEach(fetcher => {
       console.log("🚛  " + fetcher.name + ": " + saved_rounds + " rounds newer than " + fetcher.latest_round_time);
       fetcher.write_jsons(settings.timespans)
       .then(ret => {
-        // console.log('WRITING DONE: ' + ret);
-        fetcher.running = false;
-        var are_we_done = true;
-        fetchers.forEach(f => {
-          if(f.running) are_we_done = false;
-        });
-        if (are_we_done) db.close();
+        fetcher.fetch_worker_list()
+        .then(current_workers => {
+          console.log(current_workers);
+          fetcher.fetch_worker_history()
+          .then(ret => {
+            fetcher.running = false;
+            var are_we_done = true;
+            fetchers.forEach(f => {
+              if(f.running) are_we_done = false;
+            });
+            if (are_we_done) db.close();
+          });
+        })
       })
     });
   })
 });
 
-fetchers.forEach(fetcher => {
-  fetcher.fetch_worker_list()
-  .then(current_workers => {
-    console.log(current_workers);
-  })
-});

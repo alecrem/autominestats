@@ -5,7 +5,6 @@ module.exports = function(mongoose) {
     date: Date,
     address: String,
     worker: String,
-    lastSeen: Number,
     validShares: Number,
     invalidShares: Number,
     staleShares: Number,

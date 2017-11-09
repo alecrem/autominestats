@@ -95,14 +95,59 @@ module.exports = class Fetcher {
       console.error(err);
     });
   }
+  fetch_worker_history() {
+    var parray2 = this.current_workers.map(worker => {
+      var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/worker/' + worker + '/history';
+      return needle('get', fetch_url)
+      .then(resp => {
+        var new_rounds = resp.body.data;
+        var parray = [];
+        var parray = new_rounds.map(round => {
+          var new_round = new WorkerRounds(round);
+          new_round.date = new Date(new_round.time * 1000);
+          var new_date = new Date();
+          new_round.created = new_date;
+          new_round.updated = new_date;
+          new_round.address = this.address;
+          new_round.worker = worker;
+          return new_round.save()
+          .then((new_round) => {
+            // console.log("Saved round " + new_round.time + " / " + new_round.date);
+          })
+          .catch((err) => {
+            console.log("Saving failed for round " + new_round.time + " / " + new_round.date);
+            console.error(err);
+          });
+
+        });
+        return Promise.all(parray)
+        .then(() => {
+          // console.log("All saving done: " + parray.length);
+          return parray.length;
+        })
+        .catch((err) => console.error(err));
+      })
+      .catch(err => {
+        console.error("Error fetching ethermine's worker history JSON:");
+        console.error(err);
+      });
+    });
+    return Promise.all(parray2)
+    .then(() => {
+      // console.log("All saving done: " + parray2.length);
+      return parray2.length;
+    })
+  }
   fetch_worker_list() {
     var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/workers';
     return needle('get', fetch_url)
     .then(resp => {
       var current_workers = [];
-      current_workers = resp.body.data;
-      console.log("Workers fetched: " + resp.body.data.length);
-      console.log("Workers to be saved: " + current_workers.length);
+      resp.body.data.map(worker => {
+        current_workers.push(worker.worker);
+      });
+      // console.log("Workers fetched: " + resp.body.data.length);
+      this.current_workers = current_workers;
       return current_workers;
     })
     .catch(err => {
