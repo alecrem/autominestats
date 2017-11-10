@@ -7,47 +7,26 @@ module.exports = class Fetcher {
   constructor(args){
     this.address = args.address;
     this.name = args.name;
+    this.workers = args.workers;
     this.latest_round_time = 0;
+    this.latest_worker_round_time = 0;
     this.running = false;
     Rounds = args.models.Rounds;
     WorkerRounds = args.models.WorkerRounds;
   }
-  find_latest() {
-    // console.log("Finding the latest record on our Mongo database");
-    return Rounds.findOne({ 'address': this.address }, {}, { sort: { time: -1 } }).exec()
+  find_latest(model) {
+    // console.log("Finding the latest record for the given model");
+    return model.findOne({ 'address': this.address }, {}, { sort: { time: -1 } }).exec()
     .then((result) => {
-      if (typeof result === 'object' && result !== null) {
-        if (typeof result.time != "undefined"){
-          this.latest_round_time = result.time;
-        }
-      }
-      return this.latest_round_time;
+      console.log('THRESH ' + result.time);
+      return result.time;
     })
     .catch((err, result) => {
       console.log(err);
     })
   }
-  write_jsons(timespans) {
-    var parray = timespans.map(timespan => {
-      var thresdate = new Date();
-      thresdate.setDate(thresdate.getDate() - timespan.days);
-      var threshold = Math.floor(thresdate.getTime()/1000);
-      return Rounds.find({ 'time': { $gt: threshold }, 'address': this.address })
-      .then(results => {
-        fs.writeFile('stats_' + this.name + timespan.days + '.json', JSON.stringify(results, null, 2), (err) => {
-          if (err) throw err;
-          else console.log('✍️  stats_' + this.name + timespan.days + '.json is saved! ' + results.length + ' results newer than ' + threshold);
-        });
-      })
-    });
-    return Promise.all(parray)
-    .then(() => {
-      // console.log("All JSON saving done: " + parray.length);
-      return parray.length;
-    })
-    .catch((err) => console.error(err));
-  }
   fetch_miner_history(threshold) {
+    this.latest_round_time = threshold;
     var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/history';
     return needle('get', fetch_url)
     .then(resp => {
@@ -95,12 +74,24 @@ module.exports = class Fetcher {
       console.error(err);
     });
   }
-  fetch_worker_history() {
-    var parray2 = this.current_workers.map(worker => {
+  fetch_worker_history(threshold) {
+    this.latest_worker_round_time = threshold;
+    var parray2 = this.workers.map(worker => {
       var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/worker/' + worker + '/history';
       return needle('get', fetch_url)
       .then(resp => {
-        var new_rounds = resp.body.data;
+        var new_rounds = [];
+        if (typeof threshold == "number") {
+          // console.log("threshold is a Number");
+          resp.body.data.forEach(round => {
+            if(round.time > threshold) {
+              new_rounds.push(round);
+            }
+          });
+        } else {
+          // console.log("threshold is NOT a Number");
+          new_rounds = resp.body.data;
+        }
         var parray = [];
         var parray = new_rounds.map(round => {
           var new_round = new WorkerRounds(round);
@@ -123,12 +114,14 @@ module.exports = class Fetcher {
         return Promise.all(parray)
         .then(() => {
           // console.log("All saving done: " + parray.length);
+          console.log("🚚  " + this.name + "/" + worker + ": " + parray.length + " rounds newer than " + this.latest_round_time);
           return parray.length;
         })
         .catch((err) => console.error(err));
       })
       .catch(err => {
         console.error("Error fetching ethermine's worker history JSON:");
+        console.error(fetch_url);
         console.error(err);
       });
     });
@@ -138,21 +131,24 @@ module.exports = class Fetcher {
       return parray2.length;
     })
   }
-  fetch_worker_list() {
-    var fetch_url = 'https://api.ethermine.org/miner/' + this.address + '/workers';
-    return needle('get', fetch_url)
-    .then(resp => {
-      var current_workers = [];
-      resp.body.data.map(worker => {
-        current_workers.push(worker.worker);
-      });
-      // console.log("Workers fetched: " + resp.body.data.length);
-      this.current_workers = current_workers;
-      return current_workers;
-    })
-    .catch(err => {
-      console.error("Error fetching ethermine's current workers JSON:");
-      console.error(err);
+  write_jsons(timespans) {
+    var parray = timespans.map(timespan => {
+      var thresdate = new Date();
+      thresdate.setDate(thresdate.getDate() - timespan.days);
+      var threshold = Math.floor(thresdate.getTime()/1000);
+      return Rounds.find({ 'time': { $gt: threshold }, 'address': this.address })
+      .then(results => {
+        fs.writeFile('stats_' + this.name + timespan.days + '.json', JSON.stringify(results, null, 2), (err) => {
+          if (err) throw err;
+          else console.log('✍️  stats_' + this.name + timespan.days + '.json is saved! ' + results.length + ' results newer than ' + threshold);
+        });
+      })
     });
+    return Promise.all(parray)
+    .then(() => {
+      // console.log("All JSON saving done: " + parray.length);
+      return parray.length;
+    })
+    .catch((err) => console.error(err));
   }
 }

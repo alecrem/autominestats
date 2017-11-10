@@ -25,17 +25,16 @@ settings.accounts.forEach(account => {
 
 fetchers.forEach(fetcher => {
   fetcher.running = true;
-  fetcher.find_latest()
+  fetcher.find_latest(Rounds)
   .then(threshold => {
     fetcher.fetch_miner_history(threshold)
     .then(saved_rounds => {
       console.log("🚛  " + fetcher.name + ": " + saved_rounds + " rounds newer than " + fetcher.latest_round_time);
       fetcher.write_jsons(settings.timespans)
       .then(ret => {
-        fetcher.fetch_worker_list()
-        .then(current_workers => {
-          console.log(current_workers);
-          fetcher.fetch_worker_history()
+        fetcher.find_latest(WorkerRounds)
+        .then(threshold => {
+          fetcher.fetch_worker_history(threshold)
           .then(ret => {
             fetcher.running = false;
             var are_we_done = true;
@@ -44,9 +43,9 @@ fetchers.forEach(fetcher => {
             });
             if (are_we_done) db.close();
           });
-        })
-      })
+        });
+      });
     });
-  })
+  });
 });
 
