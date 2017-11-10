@@ -6,8 +6,13 @@ var fs = require('fs');
 var script_directory = process.argv[1].substring(0, process.argv[1].lastIndexOf("/"));
 script_directory = script_directory.substring(0, script_directory.lastIndexOf("/") + 1);
 var config = JSON.parse(fs.readFileSync(script_directory + 'config/config.json', 'utf8'));
+
+var stats_template = fs.readFileSync(script_directory + 'templates/stats_template.html', 'utf8');
+stats_template = stats_template.split("\n");
+var workers_template = fs.readFileSync(script_directory + 'templates/workers_template.html', 'utf8');
+workers_template = workers_template.split("\n");
+
 var html_files = [];
-var html_template = null;
 
 config.accounts.forEach(account => {
   config.timespans.forEach(timespan => {
@@ -16,17 +21,22 @@ config.accounts.forEach(account => {
       'accountname': account.name,
       'address': account.address,
       'timespan': timespan.days,
+      'template': stats_template
+    });
+    html_files.push({
+      'filename': 'workers_' + account.name + timespan.days + '.html',
+      'accountname': account.name,
+      'address': account.address,
+      'timespan': timespan.days,
+      'template': workers_template
     });
   });
 });
 
 html_files.forEach(html_file => {
-  if(html_template === null){
-    html_template = fs.readFileSync(script_directory + 'templates/template.html', 'utf8');
-    html_template = html_template.split("\n");
-  }
+  console.log(html_file.filename);
   var file_lines = [];
-  html_template.forEach(line => {
+  html_file.template.forEach(line => {
     file_lines.push(
       line
       .replace(/%%ACCOUNTNAME%%/g, html_file.accountname)
