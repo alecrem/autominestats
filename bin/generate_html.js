@@ -1,10 +1,11 @@
 /*
- * Writes the HTML files based on the accounts and timespans on settings.json
+ * Writes the HTML files based on the accounts and timespans on config.json
  */
 
 var fs = require('fs');
-var script_directory = process.argv[1].substring(0, process.argv[1].lastIndexOf("/") + 1) + '/';
-var config = JSON.parse(fs.readFileSync(script_directory + '/settings.json', 'utf8'));
+var script_directory = process.argv[1].substring(0, process.argv[1].lastIndexOf("/"));
+script_directory = script_directory.substring(0, script_directory.lastIndexOf("/") + 1);
+var config = JSON.parse(fs.readFileSync(script_directory + 'config/config.json', 'utf8'));
 var html_files = [];
 var html_template = null;
 
@@ -21,7 +22,7 @@ config.accounts.forEach(account => {
 
 html_files.forEach(html_file => {
   if(html_template === null){
-    html_template = fs.readFileSync(script_directory + '/template.html', 'utf8');
+    html_template = fs.readFileSync(script_directory + 'templates/template.html', 'utf8');
     html_template = html_template.split("\n");
   }
   var file_lines = [];
