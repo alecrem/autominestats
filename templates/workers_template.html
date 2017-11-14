@@ -62,14 +62,6 @@
       </div>
       <div class="col-md-auto">
         <div class="card border-dark">
-          <h4 class="card-header text-white bg-success">Workers</h4>
-          <div class="card-body">
-            <p class="card-text" id="card-workers">&nbsp;</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-auto">
-        <div class="card border-dark">
           <h4 class="card-header text-white bg-danger">Shares (Last 1h)</h4>
           <div class="card-body">
             <p class="card-text" id="card-shares">&nbsp;</p>
@@ -78,16 +70,25 @@
       </div>
     </div>
     <div class="row" style="margin-top: 2em;">
-      <h5>Hashrate, shares and workers</h5>
+      <h5>Current and average hashrates</h5>
     </div>
     <div class="row">
-      <canvas id="hashrateChart" width="400" height="200"></canvas>
+      <canvas id="currentHashrateChart" width="400" height="200"></canvas>
     </div>
     <div class="row">
-      <canvas id="sharesChart" width="400" height="200"></canvas>
+      <canvas id="averageHashrateChart" width="400" height="200"></canvas>
+    </div>
+    <div class="row" style="margin-top: 2em;">
+      <h5>Valid, stale and invalid shares</h5>
     </div>
     <div class="row">
-      <canvas id="workersChart" width="400" height="200"></canvas>
+      <canvas id="validSharesChart" width="400" height="200"></canvas>
+    </div>
+    <div class="row">
+      <canvas id="staleSharesChart" width="400" height="200"></canvas>
+    </div>
+    <div class="row">
+      <canvas id="invalidSharesChart" width="400" height="200"></canvas>
     </div>
 
   </div><!-- /.container -->
@@ -98,134 +99,234 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script> -->
   <script>
-    var graph_data = {
-      time: [],
-      validShares: [],
-      invalidShares: [],
-      staleShares: [],
-      activeWorkers: [],
-      currentHashrate: [],
-      averageHashrate: []
-    };
     function padToTwo(number) {
       if (number<=99) { number = ("0"+number).slice(-2); }
       return number;
     }
-
+    var palette = [
+      '#356997',
+      '#df691a',
+      '#4f9849',
+      '#66ccff',
+      '#804000',
+      '#8000ff',
+      '#6666ff',
+      '#ff00ff',
+      '#00ff00',
+      '#aaaa00',
+    ];
+    var graph_data = [];
+    var latestStats = {
+      validShares: [],
+      invalidShares: [],
+      staleShares: [],
+      currentHashrate: [],
+      averageHashrate: []
+    };
     $(document).ready(function(){
-      $.getJSON('data/stats_%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime(), function(data) {
-        data.forEach(function(point) {
-          var the_date = new Date(point.time*1000);
-          graph_data.time.push(padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes()));
-          graph_data.validShares.push(point.validShares);
-          graph_data.invalidShares.push(point.invalidShares);
-          graph_data.staleShares.push(point.staleShares);
-          graph_data.activeWorkers.push(point.activeWorkers);
-          graph_data.currentHashrate.push((point.currentHashrate/1000000).toFixed(2));
-          graph_data.averageHashrate.push((point.averageHashrate/1000000).toFixed(2));
+      $.when($.getJSON('data/workerlist_%%ACCOUNTNAME%%.json?nocache=' + (new Date()).getTime())
+      .then (function(workerList) {
+        workerList.map(worker => {
+          graph_data[worker] = {
+            time: [],
+            timestamp: [],
+            validShares: [],
+            invalidShares: [],
+            staleShares: [],
+            currentHashrate: [],
+            averageHashrate: []
+          };
         });
-        console.log(data[data.length-1]);
-        var currentHashrate = (data[data.length-1].currentHashrate/1000000).toFixed(2);
-        var averageHashrate = (data[data.length-1].averageHashrate/1000000).toFixed(2);
-        var activeWorkers = data[data.length-1].activeWorkers;
-        var validShares = data[data.length-1].validShares;
-        var staleShares = data[data.length-1].staleShares;
-        var invalidShares = data[data.length-1].invalidShares;
-        var totalShares = validShares + staleShares + invalidShares;
-        var validSharesPercent = (validShares*100/totalShares).toFixed(2);
-        var staleSharesPercent = (staleShares*100/totalShares).toFixed(2);
-        var invalidSharesPercent = (invalidShares*100/totalShares).toFixed(2);
-        var sharesString = validShares + ' (' + validSharesPercent + '%)';
-        sharesString += ' / ' + staleShares + ' (' + staleSharesPercent + '%)';
-        sharesString += ' / ' + invalidShares + ' (' + invalidSharesPercent + '%)';
-        $('#card-hashrate').html(currentHashrate + '&nbsp;MH/s  ' + averageHashrate + '&nbsp;MH/s');
-        $('#card-workers').html(activeWorkers);
-        $('#card-shares').html(sharesString);
-        var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext('2d'),{
-            type: 'line',
-            data: {
-              labels: graph_data.time,
-              datasets: [
-                {
-                  label: 'Current MH/s',
-                  backgroundColor: '#356997',
-                  borderColor: '#356997',
-                  borderWidth: 1,
-                  pointBorderWidth: 0,
-                  pointRadius: 1/%%TIMESPAN%%,
-                  fill: false,
-                  data: graph_data.currentHashrate
-                },
-                {
-                  label: 'Average MH/s',
-                  backgroundColor: '#df691a',
-                  borderColor: '#df691a',
-                  borderWidth: 1,
-                  pointBorderWidth: 0,
-                  pointRadius: 1/%%TIMESPAN%%,
-                  fill: false,
-                  data: graph_data.averageHashrate
-                }
-              ]
-            }
+
+        $.when($.getJSON('data/workers_%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime()))
+        .then (function(data) {
+          var parray = data.map(function(point) {
+            var the_date = new Date(point.time*1000);
+            graph_data[point.worker].time.push(padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes()));
+            graph_data[point.worker].timestamp.push(point.time);
+            graph_data[point.worker].validShares.push(point.validShares);
+            graph_data[point.worker].invalidShares.push(point.invalidShares);
+            graph_data[point.worker].staleShares.push(point.staleShares);
+            graph_data[point.worker].currentHashrate.push((point.currentHashrate/1000000).toFixed(2));
+            graph_data[point.worker].averageHashrate.push((point.averageHashrate/1000000).toFixed(2));
           });
-        var sharesChart = new Chart(document.getElementById("sharesChart").getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: graph_data.time,
-            datasets: [
-              {
-                label: 'Valid Shares',
-                backgroundColor: '#356997',
-                borderColor: '#356997',
-                borderWidth: 1,
-                pointBorderWidth: 0,
-                pointRadius: 1/%%TIMESPAN%%,
-                fill: false,
-                data: graph_data.validShares
-              },
-              {
-                label: 'Stale Shares',
-                backgroundColor: '#df691a',
-                borderColor: '#df691a',
-                borderWidth: 1,
-                pointBorderWidth: 0,
-                pointRadius: 1/%%TIMESPAN%%,
-                fill: false,
-                data: graph_data.staleShares
-              },
-              {
-                label: 'Invalid Shares',
-                backgroundColor: '#4f9849',
-                borderColor: '#4f9849',
-                borderWidth: 1,
-                pointBorderWidth: 0,
-                pointRadius: 1/%%TIMESPAN%%,
-                fill: false,
-                data: graph_data.invalidShares
-              }
-            ]
-          }
+          Promise.all(parray).then(resp => {
+            var currentHashrate = [];
+            var averageHashrate = [];
+            var validShares = [];
+            var staleShares = [];
+            var invalidShares = [];
+
+            var parray2 = workerList.map(worker => {
+              var the_currentHashrate = graph_data[worker].currentHashrate[graph_data[worker].currentHashrate.length-1]
+              currentHashrate[worker] = the_currentHashrate;
+
+              var the_averageHashrate = graph_data[worker].averageHashrate[graph_data[worker].averageHashrate.length-1]
+              var averageHashrate = [];
+              averageHashrate[worker] = the_averageHashrate;
+
+              var the_validShares = graph_data[worker].validShares[graph_data[worker].validShares.length-1]
+              var validShares = [];
+              validShares[worker] = the_validShares;
+
+              var the_staleShares = graph_data[worker].staleShares[graph_data[worker].staleShares.length-1]
+              var staleShares = [];
+              staleShares[worker] = the_staleShares;
+
+              var the_invalidShares = graph_data[worker].invalidShares[graph_data[worker].invalidShares.length-1]
+              var invalidShares = [];
+              invalidShares[worker] = the_invalidShares;
+
+              latestStats.averageHashrate[worker] = the_averageHashrate;
+              latestStats.currentHashrate[worker] = the_currentHashrate;
+              latestStats.validShares[worker] = the_validShares;
+              latestStats.staleShares[worker] = the_staleShares;
+              latestStats.invalidShares[worker] = the_invalidShares;
+            });
+            Promise.all(parray2).then(resp => {
+              var hashrateArray = [];
+              var sharesArray = [];
+              workerList.forEach(worker => {
+                hashrateArray.push(worker + ': ' + latestStats.currentHashrate[worker] + '&nbsp;MH/s  ' + latestStats.averageHashrate[worker] + '&nbsp;MH/s');
+                var validShares = latestStats.validShares[worker];
+                var staleShares = latestStats.staleShares[worker];
+                var invalidShares = latestStats.invalidShares[worker];
+                var totalShares = validShares + staleShares + invalidShares;
+                var validSharesPercent = (validShares*100/totalShares).toFixed(2);
+                var staleSharesPercent = (staleShares*100/totalShares).toFixed(2);
+                var invalidSharesPercent = (invalidShares*100/totalShares).toFixed(2);
+                var sharesString = validShares + ' (' + validSharesPercent + '%)';
+                sharesString += ' / ' + staleShares + ' (' + staleSharesPercent + '%)';
+                sharesString += ' / ' + invalidShares + ' (' + invalidSharesPercent + '%)';
+                sharesArray.push(sharesString);
+              });
+              var hashrateString = hashrateArray.join('<br>');
+              var sharesString = sharesArray.join('<br>');
+              $('#card-hashrate').html(hashrateString);
+              $('#card-shares').html(sharesString);
+              // console.log(graph_data);
+
+              var datasets = [];
+              palette_index = 0;
+              workerList.forEach(worker => {
+                datasets.push({
+                  label: worker,
+                  backgroundColor: palette[palette_index],
+                  borderColor: palette[palette_index],
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data[worker].currentHashrate
+                });
+                palette_index = palette_index + 1;
+              });
+              var currentHashrateChart = new Chart(document.getElementById("currentHashrateChart").getContext('2d'),{
+                  type: 'line',
+                  data: {
+                    labels: graph_data['itominer01'].time,
+                    datasets: datasets
+                  }
+                }
+              );
+
+              var datasets = [];
+              palette_index = 0;
+              workerList.forEach(worker => {
+                datasets.push({
+                  label: worker,
+                  backgroundColor: palette[palette_index],
+                  borderColor: palette[palette_index],
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data[worker].averageHashrate
+                });
+                palette_index = palette_index + 1;
+              });
+              var averageHashrateChart = new Chart(document.getElementById("averageHashrateChart").getContext('2d'),{
+                  type: 'line',
+                  data: {
+                    labels: graph_data['itominer01'].time,
+                    datasets: datasets
+                  }
+                }
+              );
+
+              var datasets = [];
+              palette_index = 0;
+              workerList.forEach(worker => {
+                datasets.push({
+                  label: worker,
+                  backgroundColor: palette[palette_index],
+                  borderColor: palette[palette_index],
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data[worker].validShares
+                });
+                palette_index = palette_index + 1;
+              });
+              var validSharesChart = new Chart(document.getElementById("validSharesChart").getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: graph_data['itominer01'].time,
+                  datasets: datasets
+                }
+              });
+
+              var datasets = [];
+              palette_index = 0;
+              workerList.forEach(worker => {
+                datasets.push({
+                  label: worker,
+                  backgroundColor: palette[palette_index],
+                  borderColor: palette[palette_index],
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data[worker].staleShares
+                });
+                palette_index = palette_index + 1;
+              });
+              var staleSharesChart = new Chart(document.getElementById("staleSharesChart").getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: graph_data['itominer01'].time,
+                  datasets: datasets
+                }
+              });
+
+              var datasets = [];
+              palette_index = 0;
+              workerList.forEach(worker => {
+                datasets.push({
+                  label: worker,
+                  backgroundColor: palette[palette_index],
+                  borderColor: palette[palette_index],
+                  borderWidth: 1,
+                  pointBorderWidth: 0,
+                  pointRadius: 1/%%TIMESPAN%%,
+                  fill: false,
+                  data: graph_data[worker].invalidShares
+                });
+                palette_index = palette_index + 1;
+              });
+              var invalidSharesChart = new Chart(document.getElementById("invalidSharesChart").getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: graph_data['itominer01'].time,
+                  datasets: datasets
+                }
+              });
+
+            });
+          });
         });
-        var workersChart = new Chart(document.getElementById("workersChart").getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: graph_data.time,
-            datasets: [
-              {
-                label: 'Active workers',
-                backgroundColor: '#356997',
-                borderColor: '#356997',
-                borderWidth: 1,
-                pointBorderWidth: 0,
-                pointRadius: 1/%%TIMESPAN%%,
-                fill: false,
-                data: graph_data.activeWorkers
-              }
-            ]
-          }
-        });
-      });
+      }));
     });
   </script>
 </body>
