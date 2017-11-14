@@ -57,6 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
-settings.json
+config/config.json
 stats_*.html
-stats_*.json
+workers_*.html
+data/stats_*.json
+data/workers_*.json
+data/workerlist_*.json
+.DS_Store

@@ -113,7 +113,7 @@
     }
 
     $(document).ready(function(){
-      $.getJSON('stats_%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime(), function(data) {
+      $.getJSON('data/stats_%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime(), function(data) {
         data.forEach(function(point) {
           var the_date = new Date(point.time*1000);
           graph_data.time.push(padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes()));
