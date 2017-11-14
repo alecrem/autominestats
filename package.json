@@ -1,9 +1,10 @@
 {
-  "name": "automine_stats",
+  "name": "autominestats",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "bin/fetch.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate_html": "node bin/generate_html.js",
+    "fetch": "node bin/fetch.js"
   },
   "dependencies": {
     "connect-mongo": "*",
@@ -12,7 +13,11 @@
   },
   "devDependencies": {},
   "keywords": [],
-  "author": "",
+  "author": "Alejandro Cremades",
   "license": "ISC",
-  "description": ""
+  "description": "Stats and monitoring for mining rigs using automine",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/alecrem/autominestats.git"
+  }
 }

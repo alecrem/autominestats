@@ -1,0 +1,34 @@
+{
+  "database_url": "mongodb://localhost/automine",
+  "accounts": [
+    {
+      "name": "MAKE_SOMETHING_UP_THAT_WILL_WORK_AS_A_FILENAME",
+      "address": "ETH_ADRESS_NO_ZERO_X_AT_THE_BEGINNING",
+      "workers": [
+        "THE_WORKER_NAME_YOU_USE_FOR_THIS_RIG_ON_ETHMINER",
+        "PUT_HERE_AS_MANY_AS_YOU_WANT"
+      ]
+    },
+    {
+      "name": "YOU_MAY",
+      "address": "TRACK_MORE_THAN_ONE_MINER_OR_ETH_ADDRESS",
+      "workers": [
+        "THE_WORKER_NAME_YOU_USE_FOR_THIS_RIG_ON_ETHMINER"
+      ]
+    }
+  ],
+  "timespans": [
+    {
+      "days": 1
+    },
+    {
+      "days": 3
+    },
+    {
+      "days": 7
+    },
+    {
+      "days": 30
+    }
+  ]
+}
