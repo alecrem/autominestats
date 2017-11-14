@@ -224,7 +224,7 @@
               var currentHashrateChart = new Chart(document.getElementById("currentHashrateChart").getContext('2d'),{
                   type: 'line',
                   data: {
-                    labels: graph_data['itominer01'].time,
+                    labels: graph_data[workerList[0]].time,
                     datasets: datasets
                   }
                 }
@@ -248,7 +248,7 @@
               var averageHashrateChart = new Chart(document.getElementById("averageHashrateChart").getContext('2d'),{
                   type: 'line',
                   data: {
-                    labels: graph_data['itominer01'].time,
+                    labels: graph_data[workerList[0]].time,
                     datasets: datasets
                   }
                 }
@@ -272,7 +272,7 @@
               var validSharesChart = new Chart(document.getElementById("validSharesChart").getContext('2d'), {
                 type: 'line',
                 data: {
-                  labels: graph_data['itominer01'].time,
+                  labels: graph_data[workerList[0]].time,
                   datasets: datasets
                 }
               });
@@ -295,7 +295,7 @@
               var staleSharesChart = new Chart(document.getElementById("staleSharesChart").getContext('2d'), {
                 type: 'line',
                 data: {
-                  labels: graph_data['itominer01'].time,
+                  labels: graph_data[workerList[0]].time,
                   datasets: datasets
                 }
               });
@@ -318,7 +318,7 @@
               var invalidSharesChart = new Chart(document.getElementById("invalidSharesChart").getContext('2d'), {
                 type: 'line',
                 data: {
-                  labels: graph_data['itominer01'].time,
+                  labels: graph_data[workerList[0]].time,
                   datasets: datasets
                 }
               });
