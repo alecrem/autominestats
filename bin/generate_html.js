@@ -31,10 +31,14 @@ config.accounts.forEach(account => {
       'template': workers_template
     });
   });
+  var workerlist_filename = 'data/workerlist_' + account.name + '.json';
+  fs.writeFile(script_directory + workerlist_filename, JSON.stringify(account.workers, null, 2), 'utf8', (err) => {
+    if (err) throw err;
+    else console.log('✍️  ' + workerlist_filename + ' has been saved!');
+  });
 });
 
 html_files.forEach(html_file => {
-  console.log(html_file.filename);
   var file_lines = [];
   html_file.template.forEach(line => {
     file_lines.push(

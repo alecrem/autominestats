@@ -31,18 +31,21 @@ fetchers.forEach(fetcher => {
     fetcher.fetch_miner_history(threshold)
     .then(saved_rounds => {
       console.log("🚛  " + fetcher.name + ": " + saved_rounds + " rounds newer than " + fetcher.latest_round_time);
-      fetcher.write_jsons(config.timespans)
+      fetcher.write_stats_jsons(config.timespans)
       .then(ret => {
         fetcher.find_latest(WorkerRounds)
         .then(threshold => {
           fetcher.fetch_worker_history(threshold)
           .then(ret => {
-            fetcher.running = false;
-            var are_we_done = true;
-            fetchers.forEach(f => {
-              if(f.running) are_we_done = false;
+            fetcher.write_workers_jsons(config.timespans)
+            .then(ret => {
+              fetcher.running = false;
+              var are_we_done = true;
+              fetchers.forEach(f => {
+                if(f.running) are_we_done = false;
+              });
+              if (are_we_done) db.close();
             });
-            if (are_we_done) db.close();
           });
         });
       });

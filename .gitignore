@@ -62,3 +62,5 @@ stats_*.html
 workers_*.html
 data/stats_*.json
 data/workers_*.json
+data/workerlist_*.json
+.DS_Store
