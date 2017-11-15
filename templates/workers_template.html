@@ -99,6 +99,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script> -->
   <script>
+    var timespan = %%TIMESPAN%%;
     function padToTwo(number) {
       if (number<=99) { number = ("0"+number).slice(-2); }
       return number;
@@ -123,6 +124,7 @@
       currentHashrate: [],
       averageHashrate: []
     };
+
     $(document).ready(function(){
       $.when($.getJSON('data/workerlist_%%ACCOUNTNAME%%.json?nocache=' + (new Date()).getTime())
       .then (function(workerList) {
@@ -142,7 +144,13 @@
         .then (function(data) {
           var parray = data.map(function(point) {
             var the_date = new Date(point.time*1000);
-            graph_data[point.worker].time.push(padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes()));
+            var datetime = '';
+            if (timespan <= 1) {
+              datetime = padToTwo(the_date.getHours()) + ':' + padToTwo(the_date.getMinutes());
+            } else {
+              datetime = the_date.getMonth() + '/' + the_date.getDay() + ' ' + the_date.getHours() + 'h';
+            }
+            graph_data[point.worker].time.push(datetime);
             graph_data[point.worker].timestamp.push(point.time);
             graph_data[point.worker].validShares.push(point.validShares);
             graph_data[point.worker].invalidShares.push(point.invalidShares);
