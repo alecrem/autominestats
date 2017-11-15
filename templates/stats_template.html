@@ -112,6 +112,15 @@
       currentHashrate: [],
       averageHashrate: []
     };
+    var chartOptions = {
+      legend: {
+        labels: {
+          boxWidth: 8,
+          fontSize: 10,
+          padding: 8
+        }
+      },
+    };
 
     $(document).ready(function(){
       $.getJSON('data/stats_%%ACCOUNTNAME%%%%TIMESPAN%%.json?nocache=' + (new Date()).getTime(), function(data) {
@@ -131,7 +140,6 @@
           graph_data.currentHashrate.push((point.currentHashrate/1000000).toFixed(2));
           graph_data.averageHashrate.push((point.averageHashrate/1000000).toFixed(2));
         });
-        console.log(data[data.length-1]);
         var currentHashrate = (data[data.length-1].currentHashrate/1000000).toFixed(2);
         var averageHashrate = (data[data.length-1].averageHashrate/1000000).toFixed(2);
         var activeWorkers = data[data.length-1].activeWorkers;
@@ -150,6 +158,7 @@
         $('#card-shares').html(sharesString);
         var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext('2d'),{
             type: 'line',
+            options: chartOptions,
             data: {
               labels: graph_data.time,
               datasets: [
@@ -178,6 +187,7 @@
           });
         var sharesChart = new Chart(document.getElementById("sharesChart").getContext('2d'), {
           type: 'bar',
+          options: chartOptions,
           data: {
             labels: graph_data.time,
             datasets: [
@@ -216,6 +226,7 @@
         });
         var workersChart = new Chart(document.getElementById("workersChart").getContext('2d'), {
           type: 'line',
+          options: chartOptions,
           data: {
             labels: graph_data.time,
             datasets: [
