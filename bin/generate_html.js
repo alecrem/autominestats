@@ -16,19 +16,31 @@ var html_files = [];
 
 config.accounts.forEach(account => {
   config.timespans.forEach(timespan => {
+    var statslinks = [];
+    var workerslinks = [];
+    config.timespans.forEach(span => {
+      statslinks.push('<a class="dropdown-item" href="stats_' + account.name + span.days + '.html">' + span.days + ' day</a>');
+      workerslinks.push('<a class="dropdown-item" href="workers_' + account.name + span.days + '.html">' + span.days + ' day</a>');
+    });
+    statslinks = statslinks.join("\n            ");
+    workerslinks = workerslinks.join("\n            ");
     html_files.push({
       'filename': 'stats_' + account.name + timespan.days + '.html',
       'accountname': account.name,
       'address': account.address,
       'timespan': timespan.days,
-      'template': stats_template
+      'template': stats_template,
+      'statslinks': statslinks,
+      'workerslinks': workerslinks,
     });
     html_files.push({
       'filename': 'workers_' + account.name + timespan.days + '.html',
       'accountname': account.name,
       'address': account.address,
       'timespan': timespan.days,
-      'template': workers_template
+      'template': workers_template,
+      'statslinks': statslinks,
+      'workerslinks': workerslinks,
     });
   });
   var workerlist_filename = 'data/workerlist_' + account.name + '.json';
@@ -46,6 +58,8 @@ html_files.forEach(html_file => {
       .replace(/%%ACCOUNTNAME%%/g, html_file.accountname)
       .replace(/%%ADDRESS%%/g, html_file.address)
       .replace(/%%TIMESPAN%%/g, html_file.timespan)
+      .replace(/%%STATSLINKS%%/g, html_file.statslinks)
+      .replace(/%%WORKERSLINKS%%/g, html_file.workerslinks)
     );
   });
   var file_content = file_lines.join("\n");
